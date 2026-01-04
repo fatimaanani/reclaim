@@ -187,7 +187,7 @@ class _HomeState extends State<Home> {
                     MaterialPageRoute(builder: (_) => const ItemDetails()),
                   ),
                   child: Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: cardBg,
                       borderRadius: BorderRadius.circular(18),
@@ -205,7 +205,7 @@ class _HomeState extends State<Home> {
                           ),
                         ),
 
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
 
                         Expanded(
                           child: Container(

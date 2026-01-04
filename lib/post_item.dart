@@ -152,7 +152,7 @@ class _ItemDetailsState extends State<ItemDetails> {
                     child: Center(
                       child: Text(
                         'Image',
-                        style: TextStyle(color: textDark.withOpacity(0.6)),
+                        style: TextStyle(color:  textDark.withValues(alpha: 0.6)),
                       ),
                     ),
                   ),

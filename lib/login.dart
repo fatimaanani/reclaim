@@ -75,7 +75,7 @@ class _LoginState extends State<Login> {
                       filled: true,
                       fillColor: pageBackgroundColor,
                       hintText: 'LIU Email',
-                      hintStyle: TextStyle(color: fontColor.withOpacity(0.7)),
+                      hintStyle: TextStyle(color: fontColor.withValues(alpha: 0.7)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
@@ -91,7 +91,7 @@ class _LoginState extends State<Login> {
                       filled: true,
                       fillColor: pageBackgroundColor,
                       hintText: 'Password',
-                      hintStyle: TextStyle(color: fontColor.withOpacity(0.7)),
+                      hintStyle: TextStyle(color: fontColor.withValues(alpha: 0.7)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
