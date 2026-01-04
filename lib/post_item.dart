@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 class PostItem extends StatefulWidget {
   const PostItem({super.key});
 
@@ -8,277 +7,250 @@ class PostItem extends StatefulWidget {
 }
 
 class _PostItemState extends State<PostItem> {
-  final bool isOwner = false;
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
-  final TextEditingController _proofController = TextEditingController();
+  final TextEditingController titleController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
+
+  String? selectedCategory;
+  String? selectedCampus;
+
+  bool loading = false;
 
   final Color pageBg = const Color(0xffEFF6E0);
-  final Color cardBg = const Color(0xff598392);
-  final Color textDark = const Color(0xff01161E);
-  final Color buttonFill = const Color(0xff124559);
+  final Color bubbleBg = const Color(0xff598392);
+  final Color fontColor = const Color(0xff01161E);
+  final Color buttonColor = const Color(0xff124559);
   final Color buttonText = const Color(0xffEFF6E0);
-
-  final Map<String, String> item = {
-    'title': 'iPhone 13',
-    'category': 'Tech',
-    'campus': 'Beirut',
-    'location': 'Library',
-    'status': 'Unclaimed',
-    'description':
-    'Black iPhone with cracked screen. Found near the library entrance.',
-  };
-
-  final List<Map<String, String>> claims = [
-    {
-      'user': 'student1@liu.edu',
-      'proof': 'Has same wallpaper and IMEI box',
-    },
-    {
-      'user': 'student2@liu.edu',
-      'proof': 'Phone was locked with my passcode',
-    },
-  ];
 
   @override
   void dispose() {
-    _proofController.dispose();
+    titleController.dispose();
+    descriptionController.dispose();
+    locationController.dispose();
     super.dispose();
   }
 
-  Color getStatusColor(String? status) {
-    switch (status) {
-      case 'Unclaimed':
-        return const Color(0xff4A4A4A);
-      case 'Claimed':
-        return const Color(0xff993F3A);
-      case 'Returned':
-        return const Color(0xffAEC3B0);
-      case 'Disposed':
-        return const Color(0xff622825);
-      default:
-        return const Color(0xff4A4A4A);
+  void submitItem() {
+    if (!formKey.currentState!.validate() ||
+        selectedCategory == null ||
+        selectedCampus == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please complete all fields')),
+      );
+      return;
     }
-  }
 
-  void submitClaim() {
-    if (_proofController.text.trim().isEmpty) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Claim submitted')));
-    Navigator.pop(context);
-  }
+    setState(() => loading = true);
 
-  void approveClaim() => ScaffoldMessenger.of(context)
-      .showSnackBar(const SnackBar(content: Text('Claim approved')));
-
-  void rejectClaim() => ScaffoldMessenger.of(context)
-      .showSnackBar(const SnackBar(content: Text('Claim rejected')));
-
-  void markReturned() {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Item marked as returned')));
-    Navigator.pop(context);
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() => loading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Item submitted')));
+      Navigator.of(context).pop();
+    });
   }
 
   @override
-  Widget build(BuildContext context) {
-    final statusColor = getStatusColor(item['status']);
-
-    return Scaffold(
-      backgroundColor: pageBg,
-      appBar: AppBar(
-        title: const Text('Item Details'),
-        centerTitle: true,
-        backgroundColor: cardBg,
-        foregroundColor: buttonText,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: cardBg,
-                borderRadius: BorderRadius.circular(18),
-              ),
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: pageBg,
+    appBar: AppBar(
+      title: const Text('Post Item'),
+      centerTitle: true,
+      backgroundColor: bubbleBg,
+      foregroundColor: buttonText,
+    ),
+    body: SingleChildScrollView(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Container(
+            width: 360,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: bubbleBg,
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Form(
+              key: formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item['title']!,
-                    style: const TextStyle(
+                    'Post Item',
+                    style: TextStyle(
+                      color: buttonText,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xffEFF6E0),
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '${item['category']} • ${item['campus']} • ${item['location']}',
-                    style: const TextStyle(color: Color(0xffEFF6E0)),
-                  ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 14),
+
                   Container(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: statusColor,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      item['status']!,
-                      style: const TextStyle(
-                        color: Color(0xffEFF6E0),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 200,
+                    height: 120,
                     decoration: BoxDecoration(
                       color: pageBg,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Center(
                       child: Text(
-                        'Image',
-                        style:
-                        TextStyle(color: textDark.withValues(alpha: 0.6)),
+                        'No Image',
+                        style: TextStyle(color: fontColor),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    item['description']!,
-                    style: const TextStyle(color: Color(0xffEFF6E0)),
+                  const SizedBox(height: 8),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: buttonColor,
+                        foregroundColor: buttonText,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text('Upload Image'),
+                    ),
                   ),
+
+                  const SizedBox(height: 12),
+
+                  TextFormField(
+                    controller: titleController,
+                    style: TextStyle(color: fontColor),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: pageBg,
+                      hintText: 'Item title',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    validator: (value) =>
+                    value == null || value.isEmpty ? 'Required' : null,
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  TextFormField(
+                    controller: descriptionController,
+                    maxLines: 3,
+                    style: TextStyle(color: fontColor),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: pageBg,
+                      hintText: 'Description',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    validator: (value) =>
+                    value == null || value.isEmpty ? 'Required' : null,
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  DropdownMenu<String>(
+                    hintText: 'Choose category',
+                    width: 324,
+                    inputDecorationTheme: InputDecorationTheme(
+                      filled: true,
+                      fillColor: pageBg,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    dropdownMenuEntries: const [
+                      DropdownMenuEntry(value: 'tech', label: 'Tech'),
+                      DropdownMenuEntry(
+                        value: 'accessories',
+                        label: 'Accessories',
+                      ),
+                      DropdownMenuEntry(value: 'ids', label: 'IDs & Cards'),
+                      DropdownMenuEntry(value: 'books', label: 'Books'),
+                      DropdownMenuEntry(value: 'other', label: 'Other'),
+                    ],
+                    onSelected: (value) =>
+                        setState(() => selectedCategory = value),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  DropdownMenu<String>(
+                    hintText: 'Choose campus',
+                    width: 324,
+                    inputDecorationTheme: InputDecorationTheme(
+                      filled: true,
+                      fillColor: pageBg,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    dropdownMenuEntries: const [
+                      DropdownMenuEntry(value: 'beirut', label: 'Beirut'),
+                      DropdownMenuEntry(
+                        value: 'mount_lebanon',
+                        label: 'Mount Lebanon',
+                      ),
+                    ],
+                    onSelected: (value) =>
+                        setState(() => selectedCampus = value),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  TextFormField(
+                    controller: locationController,
+                    style: TextStyle(color: fontColor),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: pageBg,
+                      hintText: 'Location',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    validator: (value) =>
+                    value == null || value.isEmpty ? 'Required' : null,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton(
+                      onPressed: loading ? null : submitItem,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: buttonColor,
+                        foregroundColor: buttonText,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text('Submit'),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  if (loading) const Center(child: CircularProgressIndicator()),
                 ],
               ),
             ),
-            const SizedBox(height: 18),
-            if (!isOwner)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Claim this item',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xffEFF6E0),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: _proofController,
-                      maxLines: 4,
-                      style: const TextStyle(color: Color(0xffEFF6E0)),
-                      decoration: InputDecoration(
-                        hintText: 'Describe proof of ownership',
-                        hintStyle:
-                        const TextStyle(color: Color(0xffEFF6E0)),
-                        filled: true,
-                        fillColor: buttonFill,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: submitClaim,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: buttonFill,
-                          foregroundColor: buttonText,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: const Text('This item is mine'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            if (isOwner) ...[
-              const SizedBox(height: 10),
-              ...claims.map(
-                    (claim) => Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              claim['user']!,
-                              style: const TextStyle(
-                                color: Color(0xffEFF6E0),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              claim['proof']!,
-                              style: const TextStyle(
-                                color: Color(0xffEFF6E0),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: approveClaim,
-                        icon: const Icon(Icons.check),
-                        color: buttonText,
-                      ),
-                      IconButton(
-                        onPressed: rejectClaim,
-                        icon: const Icon(Icons.close),
-                        color: buttonText,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-            if (isOwner)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: markReturned,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonFill,
-                    foregroundColor: buttonText,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text('Mark as Returned'),
-                ),
-              ),
-          ],
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

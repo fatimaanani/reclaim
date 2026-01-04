@@ -108,7 +108,6 @@ class _ItemDetailsState extends State<ItemDetails> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // TITLE
                   Text(
                     item['title'] ?? '',
                     style: const TextStyle(

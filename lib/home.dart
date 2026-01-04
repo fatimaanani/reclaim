@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert' as convert;
+
 import 'item_details.dart';
 import 'my_items.dart';
 import 'my_claims.dart';
 import 'post_item.dart';
+
+const String _baseURL = 'https://reclaim.atwebpages.com';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -15,42 +20,64 @@ class _HomeState extends State<Home> {
   String selectedStatus = 'All';
   String selectedCategory = 'All';
 
+  bool _loading = false;
+
   final Color pageBg = const Color(0xffEFF6E0);
   final Color cardBg = const Color(0xff598392);
   final Color buttonColor = const Color(0xff124559);
 
-  final List<Map<String, String>> allItems = [
-    {
-      'title': 'iPhone 13',
-      'category': 'Tech',
-      'campus': 'Beirut',
-      'status': 'Unclaimed',
-      'location': 'Library',
-      'description': 'Black iPhone with cracked screen',
-    },
-    {
-      'title': 'Black Wallet',
-      'category': 'Accessories',
-      'campus': 'Mount Lebanon',
-      'status': 'Claimed',
-      'location': 'Cafeteria',
-      'description': 'Leather wallet with cards',
-    },
-    {
-      'title': 'Student ID',
-      'category': 'IDs',
-      'campus': 'Beirut',
-      'status': 'Returned',
-      'location': 'Gate',
-      'description': 'LIU student ID',
-    },
-  ];
+  List<Map<String, String>> allItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchItems();
+  }
+
+  void fetchItems() async {
+    setState(() {
+      _loading = true;
+    });
+
+    try {
+      final response = await http
+          .get(Uri.parse('$_baseURL/get_items.php'))
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final List data = convert.jsonDecode(response.body);
+
+        setState(() {
+          allItems = data.map<Map<String, String>>((item) {
+            return {
+              'title': item['title'] ?? '',
+              'category': item['category'] ?? '',
+              'campus': item['campus'] ?? '',
+              'status': item['status'] ?? 'Unclaimed',
+              'location': item['location'] ?? '',
+              'description': item['description'] ?? '',
+            };
+          }).toList();
+        });
+      }
+    } catch (e) {
+      setState(() {
+        allItems = [];
+      });
+    }
+
+    setState(() {
+      _loading = false;
+    });
+  }
 
   List<Map<String, String>> getFilteredItems() => allItems.where((item) {
     final statusMatch =
         selectedStatus == 'All' || item['status'] == selectedStatus;
     final categoryMatch =
-        selectedCategory == 'All' || item['category'] == selectedCategory;
+        selectedCategory == 'All' ||
+            (item['category'] ?? '').toLowerCase() ==
+                selectedCategory.toLowerCase();
     return statusMatch && categoryMatch;
   }).toList();
 
@@ -97,7 +124,9 @@ class _HomeState extends State<Home> {
           ),
         ],
       ),
-      body: Column(
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
         children: [
           const SizedBox(height: 14),
 
@@ -146,10 +175,7 @@ class _HomeState extends State<Home> {
                   dropdownMenuEntries: const [
                     DropdownMenuEntry(value: 'All', label: 'All'),
                     DropdownMenuEntry(value: 'Tech', label: 'Tech'),
-                    DropdownMenuEntry(
-                      value: 'Accessories',
-                      label: 'Accessories',
-                    ),
+                    DropdownMenuEntry(value: 'Accessories', label: 'Accessories'),
                     DropdownMenuEntry(value: 'IDs', label: 'IDs & Cards'),
                     DropdownMenuEntry(value: 'Books', label: 'Books'),
                     DropdownMenuEntry(value: 'Other', label: 'Other'),
@@ -178,7 +204,7 @@ class _HomeState extends State<Home> {
               ),
               itemBuilder: (_, index) {
                 final item = items[index];
-                final status = item['status'] ?? 'Unclaimed';
+                final status = item['status'];
                 final statusColor = getStatusColor(status);
 
                 return GestureDetector(
@@ -195,18 +221,13 @@ class _HomeState extends State<Home> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          item['title'] ?? '',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
+                        Text(item['title'] ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold)),
                         const SizedBox(height: 6),
-
                         Expanded(
                           child: Container(
                             decoration: BoxDecoration(
@@ -216,57 +237,34 @@ class _HomeState extends State<Home> {
                             child: const Center(child: Text('Image')),
                           ),
                         ),
-
                         const SizedBox(height: 6),
-
-                        Text(
-                          item['description'] ?? '',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                          ),
-                        ),
-
+                        Text(item['description'] ?? '',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 12)),
                         const SizedBox(height: 4),
-
-                        Text(
-                          item['location'] ?? '',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 11,
-                          ),
-                        ),
-                        Text(
-                          item['campus'] ?? '',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 11,
-                          ),
-                        ),
-
+                        Text(item['location'] ?? '',
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 11)),
+                        Text(item['campus'] ?? '',
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 11)),
                         const SizedBox(height: 6),
-
                         Align(
                           alignment: Alignment.centerRight,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: statusColor,
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: Text(
-                              status,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            child: Text(status ?? '',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold)),
                           ),
                         ),
                       ],
