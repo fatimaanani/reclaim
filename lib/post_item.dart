@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class ItemDetails extends StatefulWidget {
-  const ItemDetails({super.key});
+class PostItem extends StatefulWidget {
+  const PostItem({super.key});
 
   @override
-  State<ItemDetails> createState() => _ItemDetailsState();
+  State<PostItem> createState() => _PostItemState();
 }
 
-class _ItemDetailsState extends State<ItemDetails> {
+class _PostItemState extends State<PostItem> {
   final bool isOwner = false;
 
   final TextEditingController _proofController = TextEditingController();
@@ -95,7 +95,6 @@ class _ItemDetailsState extends State<ItemDetails> {
         padding: const EdgeInsets.all(14),
         child: Column(
           children: [
-            // ITEM CARD (LIKE HOME POST)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(14),
@@ -114,16 +113,12 @@ class _ItemDetailsState extends State<ItemDetails> {
                       color: Color(0xffEFF6E0),
                     ),
                   ),
-
                   const SizedBox(height: 6),
-
                   Text(
                     '${item['category']} • ${item['campus']} • ${item['location']}',
                     style: const TextStyle(color: Color(0xffEFF6E0)),
                   ),
-
                   const SizedBox(height: 10),
-
                   Container(
                     padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -139,10 +134,7 @@ class _ItemDetailsState extends State<ItemDetails> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 12),
-
-                  // IMAGE PLACEHOLDER
                   Container(
                     height: 200,
                     decoration: BoxDecoration(
@@ -152,13 +144,12 @@ class _ItemDetailsState extends State<ItemDetails> {
                     child: Center(
                       child: Text(
                         'Image',
-                        style: TextStyle(color:  textDark.withValues(alpha: 0.6)),
+                        style:
+                        TextStyle(color: textDark.withValues(alpha: 0.6)),
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 12),
-
                   Text(
                     item['description']!,
                     style: const TextStyle(color: Color(0xffEFF6E0)),
@@ -166,10 +157,7 @@ class _ItemDetailsState extends State<ItemDetails> {
                 ],
               ),
             ),
-
             const SizedBox(height: 18),
-
-            // CLAIM BUBBLE (MATCHES POST CARD STYLE)
             if (!isOwner)
               Container(
                 width: double.infinity,
@@ -189,9 +177,7 @@ class _ItemDetailsState extends State<ItemDetails> {
                         color: Color(0xffEFF6E0),
                       ),
                     ),
-
                     const SizedBox(height: 10),
-
                     TextField(
                       controller: _proofController,
                       maxLines: 4,
@@ -208,9 +194,7 @@ class _ItemDetailsState extends State<ItemDetails> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 12),
-
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -228,8 +212,6 @@ class _ItemDetailsState extends State<ItemDetails> {
                   ],
                 ),
               ),
-
-            // OWNER VIEW — CLAIMS AS BUBBLES
             if (isOwner) ...[
               const SizedBox(height: 10),
               ...claims.map(
@@ -279,7 +261,6 @@ class _ItemDetailsState extends State<ItemDetails> {
                 ),
               ),
             ],
-
             if (isOwner)
               SizedBox(
                 width: double.infinity,
