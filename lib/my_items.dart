@@ -1,13 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert' as convert;
 
-class MyItems extends StatelessWidget {
+const String _baseURL = 'reclaim.atwebpages.com';
+
+class MyItems extends StatefulWidget {
   const MyItems({super.key});
+
+  @override
+  State<MyItems> createState() => _MyItemsState();
+}
+
+class _MyItemsState extends State<MyItems> {
+  bool loading = true;
 
   final Color pageBg = const Color(0xffEFF6E0);
   final Color cardBg = const Color(0xff598392);
   final Color textDark = const Color(0xff01161E);
-  final Color buttonFill = const Color(0xff124559);
   final Color buttonText = const Color(0xffEFF6E0);
+
+  List<Map<String, String>> items = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchMyItems();
+  }
+
+  void fetchMyItems() async {
+    try {
+      final url = Uri.parse(
+        'https://reclaim.atwebpages.com/get_my_items.php?user_id=1',
+      );
+
+      final response = await http.get(url);
+
+      print('STATUS CODE: ${response.statusCode}');
+      print('RAW BODY: ${response.body}');
+
+      final jsonResponse = convert.jsonDecode(response.body);
+
+      List<Map<String, String>> loadedItems = [];
+
+      for (var row in jsonResponse) {
+        loadedItems.add({
+          'title': row['title'] ?? '',
+          'campus': row['campus'] ?? '',
+          'location': row['location'] ?? '',
+          'status': row['status'] ?? '',
+        });
+      }
+
+      setState(() {
+        items = loadedItems;
+        loading = false;
+      });
+    } catch (e) {
+      print('ERROR: $e');
+      setState(() {
+        loading = false;
+      });
+    }
+  }
 
   Color getStatusColor(String status) {
     switch (status) {
@@ -49,111 +103,69 @@ class MyItems extends StatelessWidget {
             ),
             const SizedBox(height: 14),
 
-            Expanded(
-              child: ListView(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: cardBg,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Student ID',
-                          style: TextStyle(
-                            color: Color(0xffEFF6E0),
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'Gate • Beirut',
-                          style: TextStyle(
-                            color: Color(0xffEFF6E0),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: getStatusColor('Unclaimed'),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Text(
-                              'Unclaimed',
-                              style: TextStyle(
-                                color: Color(0xff01161E),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+            if (loading)
+              const Center(child: CircularProgressIndicator())
+            else if (items.isEmpty)
+              const Center(child: Text('No items found'))
+            else
+              Expanded(
+                child: ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (_, index) {
+                    final item = items[index];
 
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: cardBg,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Black Wallet',
-                          style: TextStyle(
-                            color: Color(0xffEFF6E0),
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'Cafeteria • Mount Lebanon',
-                          style: TextStyle(
-                            color: Color(0xffEFF6E0),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
+                    return Container(
+                      padding: const EdgeInsets.all(14),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: cardBg,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item['title'] ?? '',
+                            style: const TextStyle(
+                              color: Color(0xffEFF6E0),
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
-                            decoration: BoxDecoration(
-                              color: getStatusColor('Returned'),
-                              borderRadius: BorderRadius.circular(10),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${item['location']} • ${item['campus']}',
+                            style: const TextStyle(
+                              color: Color(0xffEFF6E0),
                             ),
-                            child: const Text(
-                              'Returned',
-                              style: TextStyle(
-                                color: Color(0xff01161E),
-                                fontWeight: FontWeight.bold,
+                          ),
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: getStatusColor(item['status'] ?? ''),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                item['status'] ?? '',
+                                style: const TextStyle(
+                                  color: Color(0xff01161E),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
           ],
         ),
       ),

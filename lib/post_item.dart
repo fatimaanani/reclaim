@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 
-const String _baseURL = 'https://reclaim.atwebpages.com';
+const String _baseURL = 'reclaim.atwebpages.com';
 
 class PostItem extends StatefulWidget {
   const PostItem({super.key});
@@ -50,17 +50,21 @@ class _PostItemState extends State<PostItem> {
     setState(() => loading = true);
 
     try {
+      final url = Uri.https(_baseURL, 'add_item.php');
+
       final response = await http
           .post(
-        Uri.parse('$_baseURL/add_item.php'),
-        headers: {'Content-Type': 'application/json'},
+        url,
+        headers: const {
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
         body: convert.jsonEncode({
-          'user_id': 1,
-          'title': titleController.text,
-          'description': descriptionController.text,
-          'category': selectedCategory,
-          'campus': selectedCampus,
-          'location': locationController.text,
+          'user_id': '1',
+          'title': titleController.text.toString(),
+          'description': descriptionController.text.toString(),
+          'category': selectedCategory.toString(),
+          'campus': selectedCampus.toString(),
+          'location': locationController.text.toString(),
         }),
       )
           .timeout(const Duration(seconds: 5));
@@ -145,7 +149,8 @@ class _PostItemState extends State<PostItem> {
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) =>
+                    v == null || v.isEmpty ? 'Required' : null,
                   ),
 
                   const SizedBox(height: 10),
@@ -162,7 +167,8 @@ class _PostItemState extends State<PostItem> {
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) =>
+                    v == null || v.isEmpty ? 'Required' : null,
                   ),
 
                   const SizedBox(height: 10),
@@ -172,12 +178,15 @@ class _PostItemState extends State<PostItem> {
                     width: 324,
                     dropdownMenuEntries: const [
                       DropdownMenuEntry(value: 'tech', label: 'Tech'),
-                      DropdownMenuEntry(value: 'accessories', label: 'Accessories'),
-                      DropdownMenuEntry(value: 'ids', label: 'IDs & Cards'),
+                      DropdownMenuEntry(
+                          value: 'accessories', label: 'Accessories'),
+                      DropdownMenuEntry(
+                          value: 'ids', label: 'IDs & Cards'),
                       DropdownMenuEntry(value: 'books', label: 'Books'),
                       DropdownMenuEntry(value: 'other', label: 'Other'),
                     ],
-                    onSelected: (v) => setState(() => selectedCategory = v),
+                    onSelected: (v) =>
+                        setState(() => selectedCategory = v),
                   ),
 
                   const SizedBox(height: 10),
@@ -188,9 +197,11 @@ class _PostItemState extends State<PostItem> {
                     dropdownMenuEntries: const [
                       DropdownMenuEntry(value: 'beirut', label: 'Beirut'),
                       DropdownMenuEntry(
-                          value: 'mount_lebanon', label: 'Mount Lebanon'),
+                          value: 'mount_lebanon',
+                          label: 'Mount Lebanon'),
                     ],
-                    onSelected: (v) => setState(() => selectedCampus = v),
+                    onSelected: (v) =>
+                        setState(() => selectedCampus = v),
                   ),
 
                   const SizedBox(height: 10),
@@ -206,7 +217,8 @@ class _PostItemState extends State<PostItem> {
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) =>
+                    v == null || v.isEmpty ? 'Required' : null,
                   ),
 
                   const SizedBox(height: 16),
@@ -227,7 +239,8 @@ class _PostItemState extends State<PostItem> {
                   if (loading)
                     const Padding(
                       padding: EdgeInsets.only(top: 10),
-                      child: Center(child: CircularProgressIndicator()),
+                      child:
+                      Center(child: CircularProgressIndicator()),
                     ),
                 ],
               ),

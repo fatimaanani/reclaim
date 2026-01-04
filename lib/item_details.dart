@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert' as convert;
+
+const String _baseURL = 'reclaim.atwebpages.com';
 
 class ItemDetails extends StatefulWidget {
-  const ItemDetails({super.key});
+  final String itemId;
+
+  const ItemDetails({super.key, required this.itemId});
 
   @override
   State<ItemDetails> createState() => _ItemDetailsState();
@@ -10,7 +16,9 @@ class ItemDetails extends StatefulWidget {
 class _ItemDetailsState extends State<ItemDetails> {
   final bool isOwner = false;
 
-  final TextEditingController _proofController = TextEditingController();
+  final TextEditingController proofController = TextEditingController();
+
+  bool loading = true;
 
   final Color pageBg = const Color(0xffEFF6E0);
   final Color cardBg = const Color(0xff598392);
@@ -18,31 +26,48 @@ class _ItemDetailsState extends State<ItemDetails> {
   final Color buttonFill = const Color(0xff124559);
   final Color buttonText = const Color(0xffEFF6E0);
 
-  final Map<String, String> item = {
-    'title': 'iPhone 13',
-    'category': 'Tech',
-    'campus': 'Beirut',
-    'location': 'Library',
-    'status': 'Unclaimed',
-    'description':
-    'Black iPhone with cracked screen. Found near the library entrance.',
-  };
-
-  final List<Map<String, String>> claims = [
-    {
-      'user': 'student1@liu.edu',
-      'proof': 'Has same wallpaper and IMEI box',
-    },
-    {
-      'user': 'student2@liu.edu',
-      'proof': 'Phone was locked with my passcode',
-    },
-  ];
+  Map<String, String> item = {};
 
   @override
-  void dispose() {
-    _proofController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    fetchItem();
+  }
+
+  void fetchItem() async {
+    try {
+      final url = Uri.https(
+        _baseURL,
+        'get_item_details.php',
+        {'item_id': widget.itemId},
+      );
+
+      final response =
+      await http.get(url).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = convert.jsonDecode(response.body);
+
+        setState(() {
+          item = {
+            'title': data['title'] ?? '',
+            'category': data['category'] ?? '',
+            'campus': data['campus'] ?? '',
+            'location': data['location'] ?? '',
+            'status': capitalize(data['status']),
+            'description': data['description'] ?? '',
+          };
+          loading = false;
+        });
+      }
+    } catch (e) {
+      setState(() => loading = false);
+    }
+  }
+
+  String capitalize(String? s) {
+    if (s == null || s.isEmpty) return '';
+    return s[0].toUpperCase() + s.substring(1);
   }
 
   Color getStatusColor(String? status) {
@@ -60,28 +85,29 @@ class _ItemDetailsState extends State<ItemDetails> {
     }
   }
 
-  void submitClaim() {
-    if (_proofController.text.trim().isEmpty) return;
-
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Claim submitted')));
-    Navigator.pop(context);
+  @override
+  void dispose() {
+    proofController.dispose();
+    super.dispose();
   }
 
-  void approveClaim() => ScaffoldMessenger.of(context)
-      .showSnackBar(const SnackBar(content: Text('Claim approved')));
+  void submitClaim() {
+    if (proofController.text.trim().isEmpty) return;
 
-  void rejectClaim() => ScaffoldMessenger.of(context)
-      .showSnackBar(const SnackBar(content: Text('Claim rejected')));
-
-  void markReturned() {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Item marked as returned')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Claim submitted')),
+    );
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final statusColor = getStatusColor(item['status']);
 
     return Scaffold(
@@ -97,7 +123,6 @@ class _ItemDetailsState extends State<ItemDetails> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // MAIN CARD
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(14),
@@ -116,20 +141,12 @@ class _ItemDetailsState extends State<ItemDetails> {
                       color: Color(0xffEFF6E0),
                     ),
                   ),
-
                   const SizedBox(height: 6),
-
-                  // META LINE
                   Text(
                     '${item['category']} • ${item['campus']} • ${item['location']}',
-                    style: const TextStyle(
-                      color: Color(0xffEFF6E0),
-                    ),
+                    style: const TextStyle(color: Color(0xffEFF6E0)),
                   ),
-
                   const SizedBox(height: 10),
-
-                  // STATUS BADGE
                   Container(
                     padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -145,10 +162,7 @@ class _ItemDetailsState extends State<ItemDetails> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 14),
-
-                  // IMAGE PLACEHOLDER (NO WHITE)
                   Container(
                     height: 190,
                     decoration: BoxDecoration(
@@ -158,25 +172,23 @@ class _ItemDetailsState extends State<ItemDetails> {
                     child: Center(
                       child: Text(
                         'Image',
-                        style: TextStyle(color:  textDark.withValues(alpha: 0.7)),
+                        style: TextStyle(
+                          color: textDark.withValues(alpha: 0.7),
+                        ),
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 14),
-
-                  // DESCRIPTION (LIGHT TEXT ON CARD)
                   Text(
-                    item['description'] ?? 'No description provided',
+                    item['description'] ?? '',
                     style: const TextStyle(color: Color(0xffEFF6E0)),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(height: 20),
 
-            // NOT OWNER VIEW
             if (!isOwner) ...[
               Text(
                 'Claim this item',
@@ -187,7 +199,6 @@ class _ItemDetailsState extends State<ItemDetails> {
                 ),
               ),
               const SizedBox(height: 10),
-
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -195,15 +206,15 @@ class _ItemDetailsState extends State<ItemDetails> {
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     TextField(
-                      controller: _proofController,
+                      controller: proofController,
                       maxLines: 4,
                       style: const TextStyle(color: Color(0xffEFF6E0)),
                       decoration: InputDecoration(
                         hintText: 'Describe proof of ownership',
-                        hintStyle: const TextStyle(color: Color(0xffEFF6E0)),
+                        hintStyle:
+                        const TextStyle(color: Color(0xffEFF6E0)),
                         filled: true,
                         fillColor: buttonFill,
                         border: OutlineInputBorder(
@@ -228,88 +239,6 @@ class _ItemDetailsState extends State<ItemDetails> {
                       ),
                     ),
                   ],
-                ),
-              ),
-            ],
-
-            // OWNER VIEW
-            if (isOwner) ...[
-              Text(
-                'Claims',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: textDark,
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: claims.length,
-                itemBuilder: (_, index) {
-                  final claim = claims[index];
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: cardBg,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                claim['user'] ?? '',
-                                style: const TextStyle(
-                                  color: Color(0xffEFF6E0),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                claim['proof'] ?? '',
-                                style: const TextStyle(
-                                  color: Color(0xffEFF6E0),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: approveClaim,
-                          icon: const Icon(Icons.check),
-                          color: buttonText,
-                        ),
-                        IconButton(
-                          onPressed: rejectClaim,
-                          icon: const Icon(Icons.close),
-                          color: buttonText,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 10),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: markReturned,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonFill,
-                    foregroundColor: buttonText,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text('Mark as Returned'),
                 ),
               ),
             ],

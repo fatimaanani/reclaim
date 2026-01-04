@@ -214,7 +214,7 @@ class _HomeState extends State<Home> {
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (_) => const ItemDetails()),
+                        builder: (_) => ItemDetails(itemId: item['item_id']!)),
                   ),
                   child: Container(
                     padding: const EdgeInsets.all(12),
