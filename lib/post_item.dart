@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert' as convert;
+
+const String _baseURL = 'https://reclaim.atwebpages.com';
+
 class PostItem extends StatefulWidget {
   const PostItem({super.key});
 
@@ -32,7 +37,7 @@ class _PostItemState extends State<PostItem> {
     super.dispose();
   }
 
-  void submitItem() {
+  void submitItem() async {
     if (!formKey.currentState!.validate() ||
         selectedCategory == null ||
         selectedCampus == null) {
@@ -44,13 +49,41 @@ class _PostItemState extends State<PostItem> {
 
     setState(() => loading = true);
 
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() => loading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Item submitted')));
-      Navigator.of(context).pop();
-    });
+    try {
+      final response = await http
+          .post(
+        Uri.parse('$_baseURL/add_item.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: convert.jsonEncode({
+          'user_id': 1,
+          'title': titleController.text,
+          'description': descriptionController.text,
+          'category': selectedCategory,
+          'campus': selectedCampus,
+          'location': locationController.text,
+        }),
+      )
+          .timeout(const Duration(seconds: 5));
+
+      final result = convert.jsonDecode(response.body);
+
+      if (result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Item submitted successfully')),
+        );
+        Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Submission failed')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connection error')),
+      );
+    }
+
+    setState(() => loading = false);
   }
 
   @override
@@ -95,34 +128,14 @@ class _PostItemState extends State<PostItem> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Center(
-                      child: Text(
-                        'No Image',
-                        style: TextStyle(color: fontColor),
-                      ),
+                      child: Text('No Image',
+                          style: TextStyle(color: fontColor)),
                     ),
                   ),
-                  const SizedBox(height: 8),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: buttonColor,
-                        foregroundColor: buttonText,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: const Text('Upload Image'),
-                    ),
-                  ),
-
                   const SizedBox(height: 12),
 
                   TextFormField(
                     controller: titleController,
-                    style: TextStyle(color: fontColor),
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: pageBg,
@@ -132,8 +145,7 @@ class _PostItemState extends State<PostItem> {
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    validator: (value) =>
-                    value == null || value.isEmpty ? 'Required' : null,
+                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                   ),
 
                   const SizedBox(height: 10),
@@ -141,7 +153,6 @@ class _PostItemState extends State<PostItem> {
                   TextFormField(
                     controller: descriptionController,
                     maxLines: 3,
-                    style: TextStyle(color: fontColor),
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: pageBg,
@@ -151,8 +162,7 @@ class _PostItemState extends State<PostItem> {
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    validator: (value) =>
-                    value == null || value.isEmpty ? 'Required' : null,
+                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                   ),
 
                   const SizedBox(height: 10),
@@ -160,26 +170,14 @@ class _PostItemState extends State<PostItem> {
                   DropdownMenu<String>(
                     hintText: 'Choose category',
                     width: 324,
-                    inputDecorationTheme: InputDecorationTheme(
-                      filled: true,
-                      fillColor: pageBg,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
                     dropdownMenuEntries: const [
                       DropdownMenuEntry(value: 'tech', label: 'Tech'),
-                      DropdownMenuEntry(
-                        value: 'accessories',
-                        label: 'Accessories',
-                      ),
+                      DropdownMenuEntry(value: 'accessories', label: 'Accessories'),
                       DropdownMenuEntry(value: 'ids', label: 'IDs & Cards'),
                       DropdownMenuEntry(value: 'books', label: 'Books'),
                       DropdownMenuEntry(value: 'other', label: 'Other'),
                     ],
-                    onSelected: (value) =>
-                        setState(() => selectedCategory = value),
+                    onSelected: (v) => setState(() => selectedCategory = v),
                   ),
 
                   const SizedBox(height: 10),
@@ -187,30 +185,18 @@ class _PostItemState extends State<PostItem> {
                   DropdownMenu<String>(
                     hintText: 'Choose campus',
                     width: 324,
-                    inputDecorationTheme: InputDecorationTheme(
-                      filled: true,
-                      fillColor: pageBg,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
                     dropdownMenuEntries: const [
                       DropdownMenuEntry(value: 'beirut', label: 'Beirut'),
                       DropdownMenuEntry(
-                        value: 'mount_lebanon',
-                        label: 'Mount Lebanon',
-                      ),
+                          value: 'mount_lebanon', label: 'Mount Lebanon'),
                     ],
-                    onSelected: (value) =>
-                        setState(() => selectedCampus = value),
+                    onSelected: (v) => setState(() => selectedCampus = v),
                   ),
 
                   const SizedBox(height: 10),
 
                   TextFormField(
                     controller: locationController,
-                    style: TextStyle(color: fontColor),
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: pageBg,
@@ -220,8 +206,7 @@ class _PostItemState extends State<PostItem> {
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    validator: (value) =>
-                    value == null || value.isEmpty ? 'Required' : null,
+                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                   ),
 
                   const SizedBox(height: 16),
@@ -234,17 +219,16 @@ class _PostItemState extends State<PostItem> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: buttonColor,
                         foregroundColor: buttonText,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
                       ),
                       child: const Text('Submit'),
                     ),
                   ),
 
-                  const SizedBox(height: 10),
-
-                  if (loading) const Center(child: CircularProgressIndicator()),
+                  if (loading)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 10),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
                 ],
               ),
             ),

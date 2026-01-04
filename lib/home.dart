@@ -7,7 +7,7 @@ import 'my_items.dart';
 import 'my_claims.dart';
 import 'post_item.dart';
 
-const String _baseURL = 'https://reclaim.atwebpages.com';
+const String _baseURL = 'reclaim.atwebpages.com';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -40,30 +40,34 @@ class _HomeState extends State<Home> {
     });
 
     try {
-      final response = await http
-          .get(Uri.parse('$_baseURL/get_items.php'))
-          .timeout(const Duration(seconds: 5));
+      final url = Uri.https(_baseURL, 'get_items.php');
+      final response =
+      await http.get(url).timeout(const Duration(seconds: 5));
+
+      allItems.clear();
 
       if (response.statusCode == 200) {
-        final List data = convert.jsonDecode(response.body);
+        final jsonResponse = convert.jsonDecode(response.body);
 
-        setState(() {
-          allItems = data.map<Map<String, String>>((item) {
-            return {
-              'title': item['title'] ?? '',
-              'category': item['category'] ?? '',
-              'campus': item['campus'] ?? '',
-              'status': item['status'] ?? 'Unclaimed',
-              'location': item['location'] ?? '',
-              'description': item['description'] ?? '',
-            };
-          }).toList();
-        });
+        for (var row in jsonResponse) {
+          String status =
+          (row['status'] ?? 'unclaimed').toString();
+          status =
+              status[0].toUpperCase() + status.substring(1);
+
+          allItems.add({
+            'item_id': row['item_id'].toString(),
+            'title': row['title'] ?? '',
+            'description': row['description'] ?? '',
+            'category': row['category'] ?? '',
+            'campus': row['campus'] ?? '',
+            'location': row['location'] ?? '',
+            'status': status,
+          });
+        }
       }
     } catch (e) {
-      setState(() {
-        allItems = [];
-      });
+      allItems = [];
     }
 
     setState(() {
@@ -129,7 +133,6 @@ class _HomeState extends State<Home> {
           : Column(
         children: [
           const SizedBox(height: 14),
-
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Row(
@@ -189,14 +192,14 @@ class _HomeState extends State<Home> {
               ],
             ),
           ),
-
           const SizedBox(height: 10),
-
           Expanded(
             child: GridView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 10),
               itemCount: items.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate:
+              const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
@@ -204,13 +207,14 @@ class _HomeState extends State<Home> {
               ),
               itemBuilder: (_, index) {
                 final item = items[index];
-                final status = item['status'];
-                final statusColor = getStatusColor(status);
+                final statusColor =
+                getStatusColor(item['status']);
 
                 return GestureDetector(
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const ItemDetails()),
+                    MaterialPageRoute(
+                        builder: (_) => const ItemDetails()),
                   ),
                   child: Container(
                     padding: const EdgeInsets.all(12),
@@ -221,12 +225,14 @@ class _HomeState extends State<Home> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(item['title'] ?? '',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold)),
+                        Text(
+                          item['title'] ?? '',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
+                        ),
                         const SizedBox(height: 6),
                         Expanded(
                           child: Container(
@@ -234,22 +240,29 @@ class _HomeState extends State<Home> {
                               color: pageBg,
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: const Center(child: Text('Image')),
+                            child:
+                            const Center(child: Text('Image')),
                           ),
                         ),
                         const SizedBox(height: 6),
-                        Text(item['description'] ?? '',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 12)),
+                        Text(
+                          item['description'] ?? '',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 12),
+                        ),
                         const SizedBox(height: 4),
-                        Text(item['location'] ?? '',
-                            style: const TextStyle(
-                                color: Colors.white70, fontSize: 11)),
-                        Text(item['campus'] ?? '',
-                            style: const TextStyle(
-                                color: Colors.white70, fontSize: 11)),
+                        Text(
+                          item['location'] ?? '',
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 11),
+                        ),
+                        Text(
+                          item['campus'] ?? '',
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 11),
+                        ),
                         const SizedBox(height: 6),
                         Align(
                           alignment: Alignment.centerRight,
@@ -258,13 +271,16 @@ class _HomeState extends State<Home> {
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: statusColor,
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius:
+                              BorderRadius.circular(10),
                             ),
-                            child: Text(status ?? '',
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold)),
+                            child: Text(
+                              item['status'] ?? '',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
                       ],
@@ -274,13 +290,13 @@ class _HomeState extends State<Home> {
               },
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(14),
             child: OutlinedButton(
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const PostItem()),
+                MaterialPageRoute(
+                    builder: (_) => const PostItem()),
               ),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: buttonColor, width: 2),
