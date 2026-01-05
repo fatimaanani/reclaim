@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MyClaims extends StatefulWidget {
   const MyClaims({super.key});
@@ -27,12 +28,22 @@ class _MyClaimsState extends State<MyClaims> {
 
   void fetchMyClaims() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final int? userId = prefs.getInt('user_id');
+
+      if (userId == null) {
+        setState(() {
+          claims = [];
+          loading = false;
+        });
+        return;
+      }
+
       final url = Uri.parse(
-        'https://reclaim.atwebpages.com/get_my_claims.php?user_id=1',
+        'https://reclaim.atwebpages.com/get_my_claims.php?user_id=$userId',
       );
 
-      final response =
-      await http.get(url).timeout(const Duration(seconds: 5));
+      final response = await http.get(url).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         final jsonResponse = convert.jsonDecode(response.body);
@@ -40,8 +51,7 @@ class _MyClaimsState extends State<MyClaims> {
         List<Map<String, String>> loadedClaims = [];
 
         for (var row in jsonResponse) {
-          String status =
-          (row['claim_status'] ?? 'pending').toString();
+          String status = (row['claim_status'] ?? 'pending').toString();
           status = status[0].toUpperCase() + status.substring(1);
 
           loadedClaims.add({
@@ -49,6 +59,7 @@ class _MyClaimsState extends State<MyClaims> {
             'location': row['location'] ?? '',
             'campus': row['campus'] ?? '',
             'status': status,
+            'proof': row['proof_message'] ?? '',
           });
         }
 
@@ -107,59 +118,75 @@ class _MyClaimsState extends State<MyClaims> {
               child: loading
                   ? const Center(child: CircularProgressIndicator())
                   : ListView.builder(
-                itemCount: claims.length,
-                itemBuilder: (_, index) {
-                  final claim = claims[index];
+                      itemCount: claims.length,
+                      itemBuilder: (_, index) {
+                        final claim = claims[index];
 
-                  return Container(
-                    padding: const EdgeInsets.all(14),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: cardBg,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          claim['title'] ?? '',
-                          style: const TextStyle(
-                            color: Color(0xffEFF6E0),
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${claim['location']} • ${claim['campus']}',
-                          style: const TextStyle(
-                            color: Color(0xffEFF6E0),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
+                        return Container(
+                          padding: const EdgeInsets.all(14),
+                          margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: getStatusColor(
-                                claim['status'] ?? ''),
-                            borderRadius: BorderRadius.circular(10),
+                            color: cardBg,
+                            borderRadius: BorderRadius.circular(18),
                           ),
-                          child: Text(
-                            claim['status'] ?? '',
-                            style: const TextStyle(
-                              color: Color(0xff01161E),
-                              fontWeight: FontWeight.bold,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                claim['title'] ?? '',
+                                style: const TextStyle(
+                                  color: Color(0xffEFF6E0),
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '${claim['location']} • ${claim['campus']}',
+                                style: const TextStyle(
+                                  color: Color(0xffEFF6E0),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: getStatusColor(claim['status'] ?? ''),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  claim['status'] ?? '',
+                                  style: const TextStyle(
+                                    color: Color(0xff01161E),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              if ((claim['proof'] ?? '').isNotEmpty) ...[
+                                const SizedBox(height: 10),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xffEFF6E0),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    claim['proof']!,
+                                    style: const TextStyle(
+                                      color: Color(0xff01161E),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         ),

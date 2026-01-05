@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'home.dart';
 import 'register.dart';
 
@@ -12,6 +16,7 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool loading = false;
 
   final Color pageBackgroundColor = const Color(0xffEFF6E0);
   final Color bubbleBackgroundColor = const Color(0xff598392);
@@ -26,19 +31,53 @@ class _LoginState extends State<Login> {
     super.dispose();
   }
 
-  void login() {
+  void login() async {
     if (emailController.text.trim().isEmpty ||
         passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields')),
+      );
       return;
     }
+    setState(() => loading = true);
+    try {
+      final response = await http.post(
+        Uri.parse('https://reclaim.atwebpages.com/login.php'),
+        headers: const {
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'student_email': emailController.text.trim(),
+          'password': passwordController.text,
+        }),
+      );
 
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const Home()));
+      final result = jsonDecode(response.body);
+      if (result['success'] == true) {
+        final prefs = await SharedPreferences.getInstance();
+        final int userId = int.parse(result['user_id'].toString());
+
+        await prefs.setInt('user_id', userId);
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => Home(userId: userId),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid email or password')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connection error')),
+      );
+    }
+
+    setState(() => loading = false);
   }
+
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -70,12 +109,10 @@ class _LoginState extends State<Login> {
                   const SizedBox(height: 14),
                   TextField(
                     controller: emailController,
-                    style: TextStyle(color: fontColor),
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: pageBackgroundColor,
                       hintText: 'LIU Email',
-                      hintStyle: TextStyle(color: fontColor.withValues(alpha: 0.7)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
@@ -86,12 +123,10 @@ class _LoginState extends State<Login> {
                   TextField(
                     controller: passwordController,
                     obscureText: true,
-                    style: TextStyle(color: fontColor),
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: pageBackgroundColor,
                       hintText: 'Password',
-                      hintStyle: TextStyle(color: fontColor.withValues(alpha: 0.7)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
@@ -103,7 +138,7 @@ class _LoginState extends State<Login> {
                     width: double.infinity,
                     height: 44,
                     child: ElevatedButton(
-                      onPressed: login,
+                        onPressed: loading ? null : login,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: buttonColor,
                         foregroundColor: buttonTextColor,
@@ -111,7 +146,9 @@ class _LoginState extends State<Login> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: const Text('Login'),
+                        child: loading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text('Login'),
                     ),
                   ),
                 ],
@@ -120,13 +157,13 @@ class _LoginState extends State<Login> {
             const SizedBox(height: 10),
             TextButton(
               onPressed: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const Register()));
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const Register()),
+                );
               },
               child: Text(
                 'Create account',
-                style: TextStyle(color: fontColor, fontWeight: FontWeight.w600),
+                style: TextStyle(color: fontColor),
               ),
             ),
           ],

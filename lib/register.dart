@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 import 'login.dart';
 
 class Register extends StatefulWidget {
@@ -12,13 +15,15 @@ class _RegisterState extends State<Register> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  String selectedCampus = '...';
+  String? selectedCampus;
 
   final Color pageBackgroundColor = const Color(0xffEFF6E0);
   final Color bubbleBackgroundColor = const Color(0xff598392);
   final Color fontColor = const Color(0xff01161E);
   final Color buttonColor = const Color(0xff124559);
   final Color buttonTextColor = const Color(0xffEFF6E0);
+
+  bool loading = false;
 
   @override
   void dispose() {
@@ -27,19 +32,63 @@ class _RegisterState extends State<Register> {
     super.dispose();
   }
 
-  void register() {
+  void register() async {
     if (emailController.text.trim().isEmpty ||
-        passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+        passwordController.text.isEmpty ||
+        selectedCampus == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields')),
+      );
       return;
     }
 
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const Login()));
+    setState(() => loading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://reclaim.atwebpages.com/register.php'),
+        headers: const {
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'student_email': emailController.text.trim(),
+          'password': passwordController.text,
+          'campus': selectedCampus,
+        }),
+      );
+
+      final result = jsonDecode(response.body);
+
+      if (result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account created successfully')),
+        );
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const Login()),
+        );
+      } else {
+        String message = 'Registration failed';
+
+        if (result['message'] == 'email_exists') {
+          message = 'Email already exists';
+        } else if (result['message'] == 'missing_data') {
+          message = 'Please fill all fields';
+        }
+
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connection error')),
+      );
+    }
+
+    setState(() => loading = false);
   }
+
+
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -67,6 +116,7 @@ class _RegisterState extends State<Register> {
                 ),
               ),
               const SizedBox(height: 14),
+
               TextField(
                 controller: emailController,
                 style: TextStyle(color: fontColor),
@@ -81,7 +131,9 @@ class _RegisterState extends State<Register> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 10),
+
               TextField(
                 controller: passwordController,
                 obscureText: true,
@@ -97,7 +149,9 @@ class _RegisterState extends State<Register> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 12),
+
               Text(
                 'Choose Campus',
                 style: TextStyle(
@@ -105,9 +159,10 @@ class _RegisterState extends State<Register> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+
               const SizedBox(height: 8),
+
               DropdownMenu<String>(
-                initialSelection: selectedCampus,
                 width: 304,
                 textStyle: TextStyle(color: fontColor),
                 inputDecorationTheme: InputDecorationTheme(
@@ -126,18 +181,19 @@ class _RegisterState extends State<Register> {
                   ),
                 ],
                 onSelected: (value) {
-                  if (value == null) return;
                   setState(() {
                     selectedCampus = value;
                   });
                 },
               ),
+
               const SizedBox(height: 16),
+
               SizedBox(
                 width: double.infinity,
                 height: 44,
                 child: ElevatedButton(
-                  onPressed: register,
+                  onPressed: loading ? null : register,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
                     foregroundColor: buttonTextColor,
@@ -145,7 +201,9 @@ class _RegisterState extends State<Register> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: const Text('Create account'),
+                  child: loading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Create account'),
                 ),
               ),
             ],

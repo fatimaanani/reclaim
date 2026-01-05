@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
+import 'package:shared_preferences/shared_preferences.dart';
 
 const String _baseURL = 'reclaim.atwebpages.com';
 
@@ -29,25 +30,39 @@ class _MyItemsState extends State<MyItems> {
 
   void fetchMyItems() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final int? userId = prefs.getInt('user_id');
+
+      if (userId == null) {
+        setState(() {
+          items = [];
+          loading = false;
+        });
+        return;
+      }
+
       final url = Uri.parse(
-        'https://reclaim.atwebpages.com/get_my_items.php?user_id=1',
+        'https://reclaim.atwebpages.com/get_my_items.php?user_id=$userId',
       );
 
       final response = await http.get(url);
-
-      print('STATUS CODE: ${response.statusCode}');
-      print('RAW BODY: ${response.body}');
 
       final jsonResponse = convert.jsonDecode(response.body);
 
       List<Map<String, String>> loadedItems = [];
 
       for (var row in jsonResponse) {
+        String status = (row['status'] ?? '').toString();
+
+        if (status.isNotEmpty) {
+          status = status[0].toUpperCase() + status.substring(1);
+        }
+
         loadedItems.add({
           'title': row['title'] ?? '',
           'campus': row['campus'] ?? '',
           'location': row['location'] ?? '',
-          'status': row['status'] ?? '',
+          'status': status,
         });
       }
 
@@ -56,7 +71,6 @@ class _MyItemsState extends State<MyItems> {
         loading = false;
       });
     } catch (e) {
-      print('ERROR: $e');
       setState(() {
         loading = false;
       });

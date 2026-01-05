@@ -131,10 +131,6 @@ class _PostItemState extends State<PostItem> {
                       color: pageBg,
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Center(
-                      child: Text('No Image',
-                          style: TextStyle(color: fontColor)),
-                    ),
                   ),
                   const SizedBox(height: 12),
 

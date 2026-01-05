@@ -169,14 +169,6 @@ class _ItemDetailsState extends State<ItemDetails> {
                       color: pageBg,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Center(
-                      child: Text(
-                        'Image',
-                        style: TextStyle(
-                          color: textDark.withValues(alpha: 0.7),
-                        ),
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 14),
                   Text(
