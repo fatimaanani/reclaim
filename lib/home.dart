@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'widgets/item_card.dart';
-
+import 'owner_claims.dart';
 
 import 'item_details.dart';
 import 'my_items.dart';
@@ -137,7 +137,13 @@ class _HomeState extends State<Home> {
               MaterialPageRoute(builder: (_) => const MyClaims()),
             ),
           ),
-
+          IconButton(
+            icon: const Icon(Icons.gavel),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const OwnerClaims()),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: OutlinedButton(
