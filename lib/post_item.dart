@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 const String _baseURL = 'reclaim.atwebpages.com';
 
@@ -48,6 +50,17 @@ class _PostItemState extends State<PostItem> {
     }
 
     setState(() => loading = true);
+    final prefs = await SharedPreferences.getInstance();
+    final int? userId = prefs.getInt('user_id');
+
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not logged in')),
+      );
+      setState(() => loading = false);
+      return;
+    }
+
 
     try {
       final url = Uri.https(_baseURL, 'add_item.php');
@@ -59,7 +72,7 @@ class _PostItemState extends State<PostItem> {
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: convert.jsonEncode({
-          'user_id': '1',
+          'user_id': userId,
           'title': titleController.text.toString(),
           'description': descriptionController.text.toString(),
           'category': selectedCategory.toString(),

@@ -84,9 +84,9 @@ class _MyClaimsState extends State<MyClaims> {
       case 'Rejected':
         return const Color(0xff993F3A);
       case 'Pending':
-        return const Color(0xffE0E1DD);
+        return const Color(0xff75786b);
       default:
-        return const Color(0xffE0E1DD);
+        return const Color(0xff74814d);
     }
   }
 

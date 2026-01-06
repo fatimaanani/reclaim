@@ -38,13 +38,14 @@ class _HomeState extends State<Home> {
     super.initState();
     fetchItems();
   }
+
   void logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_id');
 
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const Login()),
-      (route) => false,
+          (route) => false,
     );
   }
 
@@ -91,8 +92,8 @@ class _HomeState extends State<Home> {
         selectedStatus == 'All' || item['status'] == selectedStatus;
     final categoryMatch =
         selectedCategory == 'All' ||
-        (item['category'] ?? '').toLowerCase() ==
-            selectedCategory.toLowerCase();
+            (item['category'] ?? '').toLowerCase() ==
+                selectedCategory.toLowerCase();
     return statusMatch && categoryMatch;
   }).toList();
 
@@ -109,6 +110,55 @@ class _HomeState extends State<Home> {
       default:
         return const Color(0xff4A4A4A);
     }
+  }
+
+  void showCollectionInfo() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(22),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                'Item Collection Notice',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              SizedBox(height: 10),
+              Text(
+                'Once a claim is approved, the item can be collected from the Lost & Found Office.',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Location: Block B – 2nd Floor\nContact: 01-234-567',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -149,7 +199,7 @@ class _HomeState extends State<Home> {
             child: OutlinedButton(
               onPressed: logout,
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Colors.white, width: 2),
+                side: const BorderSide(color: Colors.white, width: 2),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -168,142 +218,144 @@ class _HomeState extends State<Home> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : Column(
+        children: [
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const SizedBox(height: 14),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      DropdownMenu<String>(
-                        initialSelection: selectedStatus,
-                        width: 160,
-                        inputDecorationTheme: InputDecorationTheme(
-                          filled: true,
-                          fillColor: buttonColor,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        textStyle: const TextStyle(color: Colors.white),
-                        dropdownMenuEntries: const [
-                          DropdownMenuEntry(value: 'All', label: 'All'),
-                          DropdownMenuEntry(
-                            value: 'Unclaimed',
-                            label: 'Unclaimed',
-                          ),
-                          DropdownMenuEntry(value: 'Claimed', label: 'Claimed'),
-                          DropdownMenuEntry(
-                            value: 'Returned',
-                            label: 'Returned',
-                          ),
-                          DropdownMenuEntry(
-                            value: 'Disposed',
-                            label: 'Disposed',
-                          ),
-                        ],
-                        onSelected: (value) {
-                          if (value != null) {
-                            setState(() => selectedStatus = value);
-                          }
-                        },
-                      ),
-                      DropdownMenu<String>(
-                        initialSelection: selectedCategory,
-                        width: 160,
-                        inputDecorationTheme: InputDecorationTheme(
-                          filled: true,
-                          fillColor: buttonColor,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        textStyle: const TextStyle(color: Colors.white),
-                        dropdownMenuEntries: const [
-                          DropdownMenuEntry(value: 'All', label: 'All'),
-                          DropdownMenuEntry(value: 'Tech', label: 'Tech'),
-                          DropdownMenuEntry(
-                            value: 'Accessories',
-                            label: 'Accessories',
-                          ),
-                          DropdownMenuEntry(value: 'IDs', label: 'IDs & Cards'),
-                          DropdownMenuEntry(value: 'Books', label: 'Books'),
-                          DropdownMenuEntry(value: 'Other', label: 'Other'),
-                        ],
-                        onSelected: (value) {
-                          if (value != null) {
-                            setState(() => selectedCategory = value);
-                          }
-                        },
-                      ),
-                    ],
+                DropdownMenu<String>(
+                  initialSelection: selectedStatus,
+                  width: 160,
+                  inputDecorationTheme: InputDecorationTheme(
+                    filled: true,
+                    fillColor: buttonColor,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
+                  textStyle: const TextStyle(color: Colors.white),
+                  dropdownMenuEntries: const [
+                    DropdownMenuEntry(value: 'All', label: 'All'),
+                    DropdownMenuEntry(
+                      value: 'Unclaimed',
+                      label: 'Unclaimed',
+                    ),
+                    DropdownMenuEntry(value: 'Claimed', label: 'Claimed'),
+                    DropdownMenuEntry(
+                      value: 'Returned',
+                      label: 'Returned',
+                    ),
+                    DropdownMenuEntry(
+                      value: 'Disposed',
+                      label: 'Disposed',
+                    ),
+                  ],
+                  onSelected: (value) {
+                    if (value != null) {
+                      setState(() => selectedStatus = value);
+                    }
+                  },
                 ),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: GridView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    itemCount: items.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 1.05,
-                        ),
-                    itemBuilder: (_, index) {
-                      final item = items[index];
-                      final statusColor = getStatusColor(item['status']);
-
-                      return ItemCard(
-                        title: item['title'] ?? '',
-                        description: item['description'] ?? '',
-                        location: item['location'] ?? '',
-                        campus: item['campus'] ?? '',
-                        status: item['status'] ?? '',
-                        statusColor: statusColor,
-                        imageUrl: item['image_url'],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ItemDetails(itemId: item['item_id']!),
-                          ),
-                        ),
-                      );
-
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const PostItem()),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: buttonColor, width: 2),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: Text(
-                      'Add Lost Item',
-                      style: TextStyle(
-                        color: buttonColor,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                DropdownMenu<String>(
+                  initialSelection: selectedCategory,
+                  width: 160,
+                  inputDecorationTheme: InputDecorationTheme(
+                    filled: true,
+                    fillColor: buttonColor,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
                     ),
                   ),
+                  textStyle: const TextStyle(color: Colors.white),
+                  dropdownMenuEntries: const [
+                    DropdownMenuEntry(value: 'All', label: 'All'),
+                    DropdownMenuEntry(value: 'Tech', label: 'Tech'),
+                    DropdownMenuEntry(
+                      value: 'Accessories',
+                      label: 'Accessories',
+                    ),
+                    DropdownMenuEntry(value: 'IDs', label: 'IDs & Cards'),
+                    DropdownMenuEntry(value: 'Books', label: 'Books'),
+                    DropdownMenuEntry(value: 'Other', label: 'Other'),
+                  ],
+                  onSelected: (value) {
+                    if (value != null) {
+                      setState(() => selectedCategory = value);
+                    }
+                  },
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 10,
+              ),
+              itemCount: items.length,
+              itemBuilder: (_, index) {
+                final item = items[index];
+                final statusColor = getStatusColor(item['status']);
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: ItemCard(
+                    title: item['title'] ?? '',
+                    description: item['description'] ?? '',
+                    location: item['location'] ?? '',
+                    campus: item['campus'] ?? '',
+                    status: item['status'] ?? '',
+                    statusColor: statusColor,
+                    imageUrl: item['image_url'],
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ItemDetails(itemId: item['item_id']!),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: OutlinedButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PostItem()),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: buttonColor, width: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: Text(
+                'Add Lost Item',
+                style: TextStyle(
+                  color: buttonColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: buttonColor,
+        onPressed: showCollectionInfo,
+        child: const Icon(Icons.info_outline, color: Colors.white),
+      ),
     );
   }
 }
