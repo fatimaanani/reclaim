@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'widgets/item_card.dart';
+
 
 import 'item_details.dart';
 import 'my_items.dart';
@@ -252,92 +254,22 @@ class _HomeState extends State<Home> {
                       final item = items[index];
                       final statusColor = getStatusColor(item['status']);
 
-                      return GestureDetector(
+                      return ItemCard(
+                        title: item['title'] ?? '',
+                        description: item['description'] ?? '',
+                        location: item['location'] ?? '',
+                        campus: item['campus'] ?? '',
+                        status: item['status'] ?? '',
+                        statusColor: statusColor,
+                        imageUrl: item['image_url'],
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                ItemDetails(itemId: item['item_id']!),
-                          ),
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: cardBg,
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item['title'] ?? '',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Expanded(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: pageBg,
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                item['description'] ?? '',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                item['location'] ?? '',
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 11,
-                                ),
-                              ),
-                              Text(
-                                item['campus'] ?? '',
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 11,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: statusColor,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    item['status'] ?? '',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                            builder: (_) => ItemDetails(itemId: item['item_id']!),
                           ),
                         ),
                       );
+
                     },
                   ),
                 ),

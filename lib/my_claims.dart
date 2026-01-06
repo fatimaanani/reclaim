@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'widgets/item_card.dart';
 
 class MyClaims extends StatefulWidget {
   const MyClaims({super.key});
@@ -122,68 +123,15 @@ class _MyClaimsState extends State<MyClaims> {
                       itemBuilder: (_, index) {
                         final claim = claims[index];
 
-                        return Container(
-                          padding: const EdgeInsets.all(14),
-                          margin: const EdgeInsets.only(bottom: 12),
-                          decoration: BoxDecoration(
-                            color: cardBg,
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                claim['title'] ?? '',
-                                style: const TextStyle(
-                                  color: Color(0xffEFF6E0),
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                '${claim['location']} • ${claim['campus']}',
-                                style: const TextStyle(
-                                  color: Color(0xffEFF6E0),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: getStatusColor(claim['status'] ?? ''),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  claim['status'] ?? '',
-                                  style: const TextStyle(
-                                    color: Color(0xff01161E),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              if ((claim['proof'] ?? '').isNotEmpty) ...[
-                                const SizedBox(height: 10),
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xffEFF6E0),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    claim['proof']!,
-                                    style: const TextStyle(
-                                      color: Color(0xff01161E),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
+                        return ItemCard(
+                          title: claim['title'] ?? '',
+                          description: '',
+                          location: claim['location'] ?? '',
+                          campus: claim['campus'] ?? '',
+                          status: claim['status'] ?? '',
+                          statusColor: getStatusColor(claim['status'] ?? ''),
+                          imageUrl: null,
+                          proofMessage: claim['proof'],
                         );
                       },
                     ),

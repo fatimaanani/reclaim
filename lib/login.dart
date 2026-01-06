@@ -39,8 +39,8 @@ class _LoginState extends State<Login> {
       );
       return;
     }
-    setState(() => loading = true);
-    try {
+   setState(() => loading = true);
+    try  {
       final response = await http.post(
         Uri.parse('https://reclaim.atwebpages.com/login.php'),
         headers: const {
@@ -64,6 +64,12 @@ class _LoginState extends State<Login> {
             builder: (_) => Home(userId: userId),
           ),
         );
+        /*Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => const Home(),
+          ),
+        );*/
+
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid email or password')),
@@ -74,7 +80,6 @@ class _LoginState extends State<Login> {
         const SnackBar(content: Text('Connection error')),
       );
     }
-
     setState(() => loading = false);
   }
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 const String _baseURL = 'reclaim.atwebpages.com';
 
@@ -91,14 +93,49 @@ class _ItemDetailsState extends State<ItemDetails> {
     super.dispose();
   }
 
-  void submitClaim() {
+  void submitClaim() async {
     if (proofController.text.trim().isEmpty) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Claim submitted')),
-    );
-    Navigator.pop(context);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final int? userId = prefs.getInt('user_id');
+
+      if (userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please login again')),
+        );
+        return;
+      }
+
+      final response = await http.post(
+        Uri.https(_baseURL, 'submit_claim.php'),
+        headers: const {'Content-Type': 'application/json; charset=UTF-8'},
+        body: convert.jsonEncode({
+          'item_id': widget.itemId,
+          'claimer_id': userId,
+          'proof_message': proofController.text.trim(),
+        }),
+      );
+
+      final result = convert.jsonDecode(response.body);
+
+      if (result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Claim submitted')),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to submit claim')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connection error')),
+      );
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {

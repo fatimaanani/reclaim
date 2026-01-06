@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'widgets/item_card.dart';
+
 
 const String _baseURL = 'reclaim.atwebpages.com';
 
@@ -128,54 +130,14 @@ class _MyItemsState extends State<MyItems> {
                   itemBuilder: (_, index) {
                     final item = items[index];
 
-                    return Container(
-                      padding: const EdgeInsets.all(14),
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: cardBg,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item['title'] ?? '',
-                            style: const TextStyle(
-                              color: Color(0xffEFF6E0),
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '${item['location']} • ${item['campus']}',
-                            style: const TextStyle(
-                              color: Color(0xffEFF6E0),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: getStatusColor(item['status'] ?? ''),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                item['status'] ?? '',
-                                style: const TextStyle(
-                                  color: Color(0xff01161E),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    return ItemCard(
+                      title: item['title'] ?? '',
+                      description: '',
+                      location: item['location'] ?? '',
+                      campus: item['campus'] ?? '',
+                      status: item['status'] ?? '',
+                      statusColor: getStatusColor(item['status'] ?? ''),
+                      imageUrl: null,
                     );
                   },
                 ),
